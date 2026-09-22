@@ -61,6 +61,12 @@
       "skillPath": "skills/better-writing/SKILL.md",
       "computedHash": "450dc38b88fc7207044bf918e52a29422ad7a3de71517119cfd12fb65c7b05ee"
     },
+    "create-zenith-compose": {
+      "source": "zenith-hosting/skills",
+      "sourceType": "github",
+      "skillPath": "skills/create-zenith-compose/SKILL.md",
+      "computedHash": "45f3b605eceef8767a234ce3ccb6bbf8d661c3db6c840aa9a2be70b8a15347ac"
+    },
     "eve": {
       "source": "vercel/eve",
       "sourceType": "github",
