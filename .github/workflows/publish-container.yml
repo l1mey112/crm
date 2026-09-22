@@ -36,7 +36,10 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
-      - run: bun install --frozen-lockfile
+      - name: Install dependencies
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/crm?schema=public
+        run: bun install --frozen-lockfile
       - name: Build AMD64 image
         run: docker build --platform linux/amd64 -t zenith-smoke .
       - name: Boot and check API
