@@ -7,7 +7,7 @@ set -Eeuo pipefail
 : "${RUN_URL:?RUN_URL is required}"
 
 image_tag=${IMAGE_TAGS%%$'\n'*}
-image_ref="${image_tag%@*}@${IMAGE_DIGEST}"
+image_ref="${image_tag%%:*}@${IMAGE_DIGEST}"
 mkdir -p zenith-image-update
 
 verified=""
