@@ -1,5 +1,6 @@
 FROM node:24-bookworm-slim AS dependencies
 
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /workspace
 ENV DATABASE_URL=postgresql://postgres:postgres@postgres:5432/crm?schema=public
 COPY package.json bun.lock turbo.json ./

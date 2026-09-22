@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Check anonymous registry access and linux/amd64 image support."""
 import hashlib
 import json
 import re
