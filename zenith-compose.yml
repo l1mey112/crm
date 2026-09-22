@@ -20,7 +20,7 @@ x-zenith:
         description: Internal URL for the API service.
         default: http://api:3001
         required: true
-      services: [api]
+      services: [api, app]
     APP_URL:
       alias: ZENITH_PUBLIC_URL
       services: [api, app]
@@ -40,6 +40,9 @@ x-zenith:
     BETTER_AUTH_SECRET:
       generate: '([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{9}[AQgw])='
       services: [api, app]
+    AGENT_BRIDGE_SECRET:
+      generate: '([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{9}[AQgw])='
+      services: [api, app, agent]
     ALLOWED_SIGN_IN:
       input:
         label: Allowed sign-in addresses
@@ -92,6 +95,11 @@ services:
       NEXT_PUBLIC_API_URL: http://api:3001
       AGENT_URL: http://agent:2000
     command: [bun, run, --filter=app, start]
+    healthcheck:
+      test: [CMD-SHELL, "node -e \"fetch('http://127.0.0.1:3000/sign-in').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     depends_on:
       api:
         condition: service_healthy
