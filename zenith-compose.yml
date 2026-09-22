@@ -1,0 +1,97 @@
+# https://zenith.hosting/developers
+
+x-zenith:
+  catalog:
+    name: CRM
+  expose:
+    - service: app
+      port: 3000
+      web: true
+  storage:
+    postgres-data:
+      volume: crm-postgres
+      label: PostgreSQL data
+      description: CRM records, sessions, and application state.
+      default_size: 5Gi
+  env:
+    API_URL:
+      input:
+        label: API URL
+        description: Internal URL for the API service.
+        default: http://api:3001
+        required: true
+      services: [api]
+    APP_URL:
+      alias: ZENITH_PUBLIC_URL
+      services: [api, app]
+    NEXT_PUBLIC_API_URL:
+      input:
+        label: Public API URL
+        description: Internal URL used by the app server to reach the API.
+        default: http://api:3001
+        required: true
+      services: [app]
+    POSTGRES_PASSWORD:
+      generate: '([A-Za-z0-9]{16})([A-Za-z0-9]{16})'
+      services: [postgres]
+    DATABASE_URL:
+      template: postgresql://postgres:{POSTGRES_PASSWORD}@postgres:5432/crm?schema=public
+      services: [api, app, agent]
+    BETTER_AUTH_SECRET:
+      generate: '([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{11})([A-Za-z0-9+/]{9}[AQgw])='
+      services: [api, app]
+    ALLOWED_SIGN_IN:
+      input:
+        label: Allowed sign-in addresses
+        description: Comma-separated domains or email addresses allowed to sign in.
+        required: true
+
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: crm
+    volumes:
+      - crm-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d crm]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  api:
+    image: ghcr.io/l1mey112/crm@sha256:ced57970e5a92a0495f4cbae147391c772901d4d3311556d71337f98b8e301c5
+    command: [sh, -c, bun run db:deploy && bun run --filter=api start]
+    environment:
+      PORT: "3001"
+      APP_URL: http://app:3000
+      AGENT_URL: http://agent:2000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    image: ghcr.io/l1mey112/crm@sha256:ced57970e5a92a0495f4cbae147391c772901d4d3311556d71337f98b8e301c5
+    environment:
+      PORT: "3000"
+      API_URL: http://api:3001
+      NEXT_PUBLIC_API_URL: http://api:3001
+      AGENT_URL: http://agent:2000
+    command: [bun, run, --filter=app, start]
+    depends_on:
+      api:
+        condition: service_started
+
+  agent:
+    image: ghcr.io/l1mey112/crm@sha256:ced57970e5a92a0495f4cbae147391c772901d4d3311556d71337f98b8e301c5
+    environment:
+      AGENT_PORT: "2000"
+      AGENT_URL: http://agent:2000
+    command: [bun, run, --filter=agent, start]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  crm-postgres:
